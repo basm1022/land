@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <style>
+        body {
+            background: #36393f;
+            color: #dcddde;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .auth-form {
+            background: #2f3136;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border: 1px solid #40444b;
+            border-radius: 5px;
+            background: #40444b;
+            color: #dcddde;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border: none;
+            border-radius: 5px;
+            background: #7289da;
+            color: white;
+            cursor: pointer;
+        }
+
+        .auth-form button:hover {
+            background: #677bc4;
+        }
+
+        .auth-form a {
+            color: #7289da;
+            text-decoration: none;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-form">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()">تسجيل الدخول</button>
+        <p>ليس لديك حساب؟ <a href="register.html">أنشئ حسابًا</a></p>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const user = users.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.href = "index.html";
+            } else {
+                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+            }
+        }
+    </script>
+</body>
+</html>
