@@ -7,21 +7,21 @@
     <style>
         /* التصميم العام */
         body {
-            background: #f0f0f0;
+            background: #f5f5f5;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Tajawal', sans-serif;
         }
 
         .phone {
             width: 360px;
             height: 700px;
-            background: #111;
+            background: #1a1a1a;
             border-radius: 40px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            box-shadow: 0 0 40px rgba(0,0,0,0.2);
             position: relative;
             overflow: hidden;
         }
@@ -29,76 +29,133 @@
         .screen {
             height: calc(100% - 60px);
             margin: 30px 15px;
-            background: #fff;
+            background: #ffffff;
             border-radius: 20px;
             padding: 20px;
             overflow-y: auto;
         }
 
-        /* تصميم النماذج */
+        /* نماذج المصادقة */
         .auth-form input {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form input:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         .auth-form button {
-            background: #007bff;
+            background: linear-gradient(45deg, #007bff, #0056b3);
             color: white;
-            padding: 12px 24px;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: opacity 0.3s;
         }
 
-        /* تصميم الرسائل */
-        .message {
-            background: #e3f2fd;
-            padding: 8px 12px;
+        .auth-form button:hover {
+            opacity: 0.9;
+        }
+
+        /* تصميم التطبيقات */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .app {
+            background: #f8f9fa;
             border-radius: 15px;
-            margin: 5px 0;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .app:hover {
+            transform: translateY(-5px);
+        }
+
+        .app img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+
+        /* واجهة الرسائل */
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+
+        .message {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 15px;
+            margin-bottom: 15px;
             max-width: 80%;
-            word-wrap: break-word;
-            clear: both;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         .message.self {
-            background: #dcf8c6;
-            float: right;
+            background: #e3f2fd;
+            margin-left: auto;
         }
 
-        .hidden {
-            display: none;
+        .message-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
         }
+
+        /* إصلاحات عامة */
+        .hidden { display: none; }
+        h2 { color: #333; margin-bottom: 25px; }
+        a { text-decoration: none; }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="phone">
         <div class="screen">
             <!-- شاشة تسجيل الدخول -->
             <div id="authScreen">
-                <h2 style="text-align: center; color: #333;">مرحباً بك!</h2>
+                <h2>مرحباً بك! 👋</h2>
                 <div class="auth-form">
                     <input type="text" id="loginUser" placeholder="اسم المستخدم">
                     <input type="password" id="loginPass" placeholder="كلمة المرور">
                     <button onclick="login()">تسجيل الدخول</button>
                     <button style="background: #28a745;" onclick="showRegister()">إنشاء حساب</button>
-                    <a href="#" onclick="showReset()" style="color: #666; font-size: 14px;">نسيت كلمة المرور؟</a>
+                    <a href="#" onclick="showReset()" style="color: #666;">نسيت كلمة المرور؟</a>
                 </div>
             </div>
 
             <!-- شاشة إنشاء حساب -->
             <div id="registerScreen" class="hidden">
-                <h2 style="text-align: center;">إنشاء حساب جديد</h2>
+                <h2>إنشاء حساب جديد 🚀</h2>
                 <div class="auth-form">
                     <input type="email" id="regEmail" placeholder="البريد الإلكتروني">
-                    <input type="text" id="regUser" placeholder="اسم المستخدم">
-                    <input type="password" id="regPass" placeholder="كلمة المرور">
+                    <input type="text" id="regUser" placeholder="اسم المستخدم (4 أحرف على الأقل)">
+                    <input type="password" id="regPass" placeholder="كلمة المرور (أحرف + أرقام)">
                     <input type="password" id="regConfirm" placeholder="تأكيد كلمة المرور">
                     <button onclick="register()">إنشاء الحساب</button>
                     <button onclick="showLogin()">عودة لتسجيل الدخول</button>
@@ -107,7 +164,7 @@
 
             <!-- شاشة إعادة تعيين كلمة المرور -->
             <div id="resetScreen" class="hidden">
-                <h2 style="text-align: center;">إعادة تعيين كلمة المرور</h2>
+                <h2>إعادة تعيين كلمة المرور 🔑</h2>
                 <div class="auth-form">
                     <input type="email" id="resetEmail" placeholder="البريد الإلكتروني">
                     <button onclick="sendResetCode()">إرسال الرمز</button>
@@ -122,30 +179,32 @@
 
             <!-- شاشة التطبيقات -->
             <div id="appScreen" class="hidden">
-                <div class="app" onclick="openApp('messages')">
-                    <img src="messages.png" alt="رسائل">
-                    <p>الرسائل</p>
-                </div>
-                <div class="app" onclick="openApp('contacts')">
-                    <img src="contacts.png" alt="جهات">
-                    <p>جهات الاتصال</p>
+                <div class="app-grid">
+                    <div class="app" onclick="openApp('messages')">
+                        <img src="messages.png" alt="رسائل">
+                        <p>الرسائل 💬</p>
+                    </div>
+                    <div class="app" onclick="openApp('contacts')">
+                        <img src="contacts.png" alt="جهات">
+                        <p>جهات الاتصال 📞</p>
+                    </div>
                 </div>
             </div>
 
             <!-- شاشة الرسائل -->
             <div id="messagesScreen" class="hidden">
-                <input type="text" id="search" placeholder="بحث عن شخص" oninput="searchContacts()">
+                <input type="text" id="search" placeholder="بحث عن شخص 🔍" oninput="searchContacts()">
                 <ul id="contactsList"></ul>
-                <button onclick="closeMessages()">رجوع</button>
+                <button onclick="closeMessages()">رجوع ◀️</button>
             </div>
 
             <!-- شاشة المحادثة -->
             <div id="chatScreen" class="hidden">
                 <h3 id="chatWith"></h3>
                 <div class="chat-box" id="chatBox"></div>
-                <input type="text" id="messageInput" placeholder="اكتب رسالة">
-                <button onclick="sendMessage()">إرسال</button>
-                <button onclick="closeChat()">رجوع</button>
+                <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+                <button onclick="sendMessage()">إرسال 🚀</button>
+                <button onclick="closeChat()">رجوع ◀️</button>
             </div>
         </div>
     </div>
@@ -158,7 +217,21 @@
         let currentChatUser = "";
         let resetCode = null;
 
-        // ========== نظام المصادقة ========== 
+        // ========== التحقق من صحة البيانات ==========
+        function validateEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+        function validateUsername(username) {
+            return username.length >= 4;
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6 && /\d/.test(password) && /[a-zA-Z]/.test(password);
+        }
+
+        // ========== نظام المصادقة ==========
         function login() {
             const username = document.getElementById('loginUser').value.trim();
             const password = document.getElementById('loginPass').value.trim();
@@ -168,7 +241,7 @@
                 currentUser = user;
                 showAppScreen();
             } else {
-                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+                alert('⚠️ بيانات الدخول غير صحيحة!');
             }
         }
 
@@ -178,26 +251,28 @@
             const password = document.getElementById('regPass').value.trim();
             const confirmPass = document.getElementById('regConfirm').value.trim();
 
-            if (!email || !username || !password) return alert('جميع الحقول مطلوبة!');
-            if (password !== confirmPass) return alert('كلمة المرور غير متطابقة!');
-            if (users.some(u => u.username === username)) return alert('اسم المستخدم موجود مسبقاً!');
+            if (!validateEmail(email)) return alert('❌ البريد الإلكتروني غير صالح!');
+            if (!validateUsername(username)) return alert('❌ اسم المستخدم يجب أن يكون 4 أحرف على الأقل!');
+            if (!validatePassword(password)) return alert('❌ كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل وتشمل أرقاماً وحروفاً!');
+            if (password !== confirmPass) return alert('❌ كلمة المرور غير متطابقة!');
+            if (users.some(u => u.username === username)) return alert('❌ اسم المستخدم موجود مسبقاً!');
 
             users.push({ email, username, password });
             localStorage.setItem('users', JSON.stringify(users));
-            alert('تم إنشاء الحساب بنجاح!');
+            alert('✅ تم إنشاء الحساب بنجاح!');
             showLogin();
         }
 
-        // ========== إعادة تعيين كلمة المرور ========== 
+        // ========== إعادة تعيين كلمة المرور ==========
         function sendResetCode() {
             const email = document.getElementById('resetEmail').value.trim();
             const user = users.find(u => u.email === email);
 
-            if (!user) return alert('البريد الإلكتروني غير مسجل!');
+            if (!user) return alert('❌ البريد الإلكتروني غير مسجل!');
             
             resetCode = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('codeSection').classList.remove('hidden');
-            alert(`تم إرسال الرمز إلى بريدك: ${resetCode}`); // محاكاة للإرسال
+            alert(`📩 تم إرسال الرمز إلى بريدك: ${resetCode}`);
         }
 
         function resetPassword() {
@@ -206,16 +281,17 @@
             const newPass = document.getElementById('newPass').value.trim();
             const user = users.find(u => u.email === email);
 
-            if (!user) return alert('البريد الإلكتروني غير صحيح!');
-            if (code != resetCode) return alert('الرمز غير صحيح!');
+            if (!user) return alert('❌ البريد الإلكتروني غير صحيح!');
+            if (code != resetCode) return alert('❌ الرمز غير صحيح!');
+            if (!validatePassword(newPass)) return alert('❌ كلمة المرور الجديدة ضعيفة!');
             
             user.password = newPass;
             localStorage.setItem('users', JSON.stringify(users));
-            alert('تم تغيير كلمة المرور بنجاح!');
+            alert('✅ تم تغيير كلمة المرور بنجاح!');
             showLogin();
         }
 
-        // ========== إدارة الشاشات ========== 
+        // ========== إدارة الشاشات ==========
         function showRegister() {
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('registerScreen').classList.remove('hidden');
@@ -237,7 +313,7 @@
             document.getElementById('appScreen').classList.remove('hidden');
         }
 
-        // ========== نظام الرسائل ========== 
+        // ========== نظام الرسائل ==========
         function openApp(appName) {
             document.getElementById('appScreen').classList.add('hidden');
             document.getElementById(appName + 'Screen').classList.remove('hidden');
@@ -253,10 +329,19 @@
             const list = document.getElementById('contactsList');
             list.innerHTML = "";
             users.forEach(user => {
-                if (user.username === currentUser.username) return; // تجنب عرض المستخدم الحالي
+                if (user.username === currentUser.username) return;
                 const li = document.createElement('li');
                 li.textContent = user.username;
-                li.style.cursor = 'pointer';
+                li.style.cssText = `
+                    padding: 10px;
+                    margin: 5px 0;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: background 0.3s;
+                `;
+                li.onmouseenter = () => li.style.background = '#e9ecef';
+                li.onmouseleave = () => li.style.background = '#f8f9fa';
                 li.onclick = () => openChat(user.username);
                 list.appendChild(li);
             });
@@ -264,7 +349,7 @@
 
         function openChat(user) {
             currentChatUser = user;
-            document.getElementById('chatWith').textContent = `محادثة مع ${user}`;
+            document.getElementById('chatWith').textContent = `محادثة مع ${user} 💬`;
             document.getElementById('messagesScreen').classList.add('hidden');
             document.getElementById('chatScreen').classList.remove('hidden');
             loadMessages();
@@ -295,11 +380,14 @@
                 messages[currentChatUser].forEach(msg => {
                     const msgDiv = document.createElement('div');
                     msgDiv.className = `message ${msg.sender === currentUser.username ? 'self' : ''}`;
-                    msgDiv.innerHTML = `<small>${msg.time}</small><br>${msg.text}`;
+                    msgDiv.innerHTML = `
+                        <div>${msg.text}</div>
+                        <div class="message-time">${msg.time}</div>
+                    `;
                     chatBox.appendChild(msgDiv);
                 });
             }
-            chatBox.scrollTop = chatBox.scrollHeight; // التمرير للأسفل تلقائياً
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function closeChat() {
