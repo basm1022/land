@@ -114,17 +114,23 @@
             max-width: 80%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: relative;
+            clear: both;
         }
 
         .message.self {
             background: #e3f2fd;
-            margin-left: auto;
+            float: right;
+        }
+
+        .message.other {
+            float: left;
         }
 
         .message-time {
             font-size: 12px;
             color: #666;
             margin-top: 5px;
+            display: block;
         }
 
         /* إصلاحات عامة */
@@ -213,9 +219,12 @@
         // بيانات التطبيق
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || {};
-        let currentUser = null;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         let currentChatUser = "";
         let resetCode = null;
+
+        // استعادة حالة تسجيل الدخول عند التحميل
+        if (currentUser) showAppScreen();
 
         // ========== التحقق من صحة البيانات ==========
         function validateEmail(email) {
@@ -239,6 +248,7 @@
 
             if (user) {
                 currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 showAppScreen();
             } else {
                 alert('⚠️ بيانات الدخول غير صحيحة!');
@@ -363,11 +373,14 @@
             const msgData = {
                 text: message,
                 sender: currentUser.username,
+                receiver: currentChatUser,
                 time: timestamp
             };
 
-            if (!messages[currentChatUser]) messages[currentChatUser] = [];
-            messages[currentChatUser].push(msgData);
+            const chatKey = [currentUser.username, currentChatUser].sort().join('_');
+            if (!messages[chatKey]) messages[chatKey] = [];
+            messages[chatKey].push(msgData);
+            
             localStorage.setItem('messages', JSON.stringify(messages));
             document.getElementById('messageInput').value = "";
             loadMessages();
@@ -376,13 +389,15 @@
         function loadMessages() {
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML = "";
-            if (messages[currentChatUser]) {
-                messages[currentChatUser].forEach(msg => {
+            const chatKey = [currentUser.username, currentChatUser].sort().join('_');
+            
+            if (messages[chatKey]) {
+                messages[chatKey].forEach(msg => {
                     const msgDiv = document.createElement('div');
-                    msgDiv.className = `message ${msg.sender === currentUser.username ? 'self' : ''}`;
+                    msgDiv.className = `message ${msg.sender === currentUser.username ? 'self' : 'other'}`;
                     msgDiv.innerHTML = `
                         <div>${msg.text}</div>
-                        <div class="message-time">${msg.time}</div>
+                        <span class="message-time">${msg.time} - ${msg.sender}</span>
                     `;
                     chatBox.appendChild(msgDiv);
                 });
