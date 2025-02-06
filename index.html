@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>هاتف ذكي متطور</title>
     <style>
-        /* تحسينات التصميم */
+        /* التصميم العام */
         body {
             background: #f0f0f0;
             display: flex;
@@ -15,6 +15,7 @@
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .phone {
             width: 360px;
             height: 700px;
@@ -24,21 +25,26 @@
             position: relative;
             overflow: hidden;
         }
+
         .screen {
             height: calc(100% - 60px);
             margin: 30px 15px;
             background: #fff;
             border-radius: 20px;
             padding: 20px;
+            overflow-y: auto;
         }
-        /* تصميم الأزرار والنماذج */
+
+        /* تصميم النماذج */
         .auth-form input {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
             border: 1px solid #ddd;
             border-radius: 8px;
+            box-sizing: border-box;
         }
+
         .auth-form button {
             background: #007bff;
             color: white;
@@ -49,26 +55,32 @@
             width: 100%;
             margin-top: 10px;
         }
-        /* تصميم المحادثة */
+
+        /* تصميم الرسائل */
         .message {
             background: #e3f2fd;
             padding: 8px 12px;
             border-radius: 15px;
             margin: 5px 0;
             max-width: 80%;
-            float: left;
+            word-wrap: break-word;
             clear: both;
         }
+
         .message.self {
             background: #dcf8c6;
             float: right;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="phone">
         <div class="screen">
-            <!-- شاشة المصادقة -->
+            <!-- شاشة تسجيل الدخول -->
             <div id="authScreen">
                 <h2 style="text-align: center; color: #333;">مرحباً بك!</h2>
                 <div class="auth-form">
@@ -110,35 +122,63 @@
 
             <!-- شاشة التطبيقات -->
             <div id="appScreen" class="hidden">
-                <!-- ... (نفس تصميم التطبيقات السابق مع تحسينات) ... -->
+                <div class="app" onclick="openApp('messages')">
+                    <img src="messages.png" alt="رسائل">
+                    <p>الرسائل</p>
+                </div>
+                <div class="app" onclick="openApp('contacts')">
+                    <img src="contacts.png" alt="جهات">
+                    <p>جهات الاتصال</p>
+                </div>
+            </div>
+
+            <!-- شاشة الرسائل -->
+            <div id="messagesScreen" class="hidden">
+                <input type="text" id="search" placeholder="بحث عن شخص" oninput="searchContacts()">
+                <ul id="contactsList"></ul>
+                <button onclick="closeMessages()">رجوع</button>
+            </div>
+
+            <!-- شاشة المحادثة -->
+            <div id="chatScreen" class="hidden">
+                <h3 id="chatWith"></h3>
+                <div class="chat-box" id="chatBox"></div>
+                <input type="text" id="messageInput" placeholder="اكتب رسالة">
+                <button onclick="sendMessage()">إرسال</button>
+                <button onclick="closeChat()">رجوع</button>
             </div>
         </div>
     </div>
 
     <script>
-        // نظام المصادقة
+        // بيانات التطبيق
         let users = JSON.parse(localStorage.getItem('users')) || [];
+        let messages = JSON.parse(localStorage.getItem('messages')) || {};
         let currentUser = null;
+        let currentChatUser = "";
+        let resetCode = null;
 
+        // ========== نظام المصادقة ========== 
         function login() {
-            let username = document.getElementById('loginUser').value;
-            let password = document.getElementById('loginPass').value;
-            let user = users.find(u => u.username === username && u.password === password);
-            
+            const username = document.getElementById('loginUser').value.trim();
+            const password = document.getElementById('loginPass').value.trim();
+            const user = users.find(u => u.username === username && u.password === password);
+
             if (user) {
                 currentUser = user;
                 showAppScreen();
             } else {
-                alert('بيانات الدخول غير صحيحة!');
+                alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
             }
         }
 
         function register() {
-            let email = document.getElementById('regEmail').value;
-            let username = document.getElementById('regUser').value;
-            let password = document.getElementById('regPass').value;
-            let confirmPass = document.getElementById('regConfirm').value;
+            const email = document.getElementById('regEmail').value.trim();
+            const username = document.getElementById('regUser').value.trim();
+            const password = document.getElementById('regPass').value.trim();
+            const confirmPass = document.getElementById('regConfirm').value.trim();
 
+            if (!email || !username || !password) return alert('جميع الحقول مطلوبة!');
             if (password !== confirmPass) return alert('كلمة المرور غير متطابقة!');
             if (users.some(u => u.username === username)) return alert('اسم المستخدم موجود مسبقاً!');
 
@@ -148,39 +188,94 @@
             showLogin();
         }
 
-        // نظام إعادة تعيين كلمة المرور
-        let resetCode = null;
-
+        // ========== إعادة تعيين كلمة المرور ========== 
         function sendResetCode() {
+            const email = document.getElementById('resetEmail').value.trim();
+            const user = users.find(u => u.email === email);
+
+            if (!user) return alert('البريد الإلكتروني غير مسجل!');
+            
             resetCode = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('codeSection').classList.remove('hidden');
-            alert(`الرمز المرسل: ${resetCode} (محاكاة لإرسال البريد)`);
+            alert(`تم إرسال الرمز إلى بريدك: ${resetCode}`); // محاكاة للإرسال
         }
 
         function resetPassword() {
-            if (document.getElementById('resetCode').value != resetCode) return alert('الرمز غير صحيح!');
-            let user = users.find(u => u.email === document.getElementById('resetEmail').value);
-            user.password = document.getElementById('newPass').value;
+            const email = document.getElementById('resetEmail').value.trim();
+            const code = document.getElementById('resetCode').value;
+            const newPass = document.getElementById('newPass').value.trim();
+            const user = users.find(u => u.email === email);
+
+            if (!user) return alert('البريد الإلكتروني غير صحيح!');
+            if (code != resetCode) return alert('الرمز غير صحيح!');
+            
+            user.password = newPass;
             localStorage.setItem('users', JSON.stringify(users));
-            alert('تم تغيير كلمة المرور!');
+            alert('تم تغيير كلمة المرور بنجاح!');
             showLogin();
         }
 
-        // إدارة الشاشات
-        function showRegister() { /* ... */ }
-        function showLogin() { /* ... */ }
-        function showReset() { /* ... */ }
-        function showAppScreen() { /* ... */ }
+        // ========== إدارة الشاشات ========== 
+        function showRegister() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('registerScreen').classList.remove('hidden');
+        }
 
-        // نظام الرسائل (محدث)
-        let messages = JSON.parse(localStorage.getItem('messages')) || {};
+        function showLogin() {
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('resetScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+        }
+
+        function showReset() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('resetScreen').classList.remove('hidden');
+        }
+
+        function showAppScreen() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+        }
+
+        // ========== نظام الرسائل ========== 
+        function openApp(appName) {
+            document.getElementById('appScreen').classList.add('hidden');
+            document.getElementById(appName + 'Screen').classList.remove('hidden');
+            if (appName === 'messages') updateContactsList();
+        }
+
+        function closeMessages() {
+            document.getElementById('messagesScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+        }
+
+        function updateContactsList() {
+            const list = document.getElementById('contactsList');
+            list.innerHTML = "";
+            users.forEach(user => {
+                if (user.username === currentUser.username) return; // تجنب عرض المستخدم الحالي
+                const li = document.createElement('li');
+                li.textContent = user.username;
+                li.style.cursor = 'pointer';
+                li.onclick = () => openChat(user.username);
+                list.appendChild(li);
+            });
+        }
+
+        function openChat(user) {
+            currentChatUser = user;
+            document.getElementById('chatWith').textContent = `محادثة مع ${user}`;
+            document.getElementById('messagesScreen').classList.add('hidden');
+            document.getElementById('chatScreen').classList.remove('hidden');
+            loadMessages();
+        }
 
         function sendMessage() {
-            let message = document.getElementById('messageInput').value;
+            const message = document.getElementById('messageInput').value.trim();
             if (!message) return;
-            
-            let timestamp = new Date().toLocaleTimeString();
-            let msgData = {
+
+            const timestamp = new Date().toLocaleTimeString();
+            const msgData = {
                 text: message,
                 sender: currentUser.username,
                 time: timestamp
@@ -189,17 +284,27 @@
             if (!messages[currentChatUser]) messages[currentChatUser] = [];
             messages[currentChatUser].push(msgData);
             localStorage.setItem('messages', JSON.stringify(messages));
+            document.getElementById('messageInput').value = "";
             loadMessages();
         }
 
         function loadMessages() {
-            let chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = messages[currentChatUser]?.map(msg => `
-                <div class="message ${msg.sender === currentUser.username ? 'self' : ''}">
-                    <small>${msg.time}</small><br>
-                    ${msg.text}
-                </div>
-            `).join('');
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = "";
+            if (messages[currentChatUser]) {
+                messages[currentChatUser].forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `message ${msg.sender === currentUser.username ? 'self' : ''}`;
+                    msgDiv.innerHTML = `<small>${msg.time}</small><br>${msg.text}`;
+                    chatBox.appendChild(msgDiv);
+                });
+            }
+            chatBox.scrollTop = chatBox.scrollHeight; // التمرير للأسفل تلقائياً
+        }
+
+        function closeChat() {
+            document.getElementById('chatScreen').classList.add('hidden');
+            document.getElementById('messagesScreen').classList.remove('hidden');
         }
     </script>
 </body>
