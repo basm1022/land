@@ -203,11 +203,10 @@
     </div>
 
     <script>
-        // إعدادات النظام
-        const WEBHOOK_URL = 'WEBHOOK_URL_HERE';
-        let currentCode = null;
+        // استبدل هذا الرابط برابط الويب هوك الجديد
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
 
-        // بيانات التطبيق
+        let currentCode = null;
         let teams = JSON.parse(localStorage.getItem('teams')) || [];
         let matches = JSON.parse(localStorage.getItem('matches')) || [];
 
@@ -248,7 +247,7 @@
             try {
                 currentCode = Math.floor(1000 + Math.random() * 9000);
                 
-                const response = await fetch(https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8, {
+                const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({content: `🔐 كود التحقق: ||${currentCode}||`})
