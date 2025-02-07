@@ -239,9 +239,21 @@
 
         // ======== تحديث بيانات المستخدم من localStorage ========
         function updateUserData() {
-            currentUser = users.find(u => u.username === currentUser.username);
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    // تحميل بيانات المستخدمين من localStorage
+    users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // البحث عن المستخدم الحالي في القائمة المحدثة
+    if (currentUser) {
+        const updatedUser = users.find(u => u.username === currentUser.username);
+        if (updatedUser) {
+            currentUser = updatedUser; // تحديث بيانات المستخدم الحالي
+            localStorage.setItem('currentUser', JSON.stringify(currentUser)); // حفظ التحديث
+        } else {
+            alert('المستخدم الحالي غير موجود في قاعدة البيانات!');
+            window.location.href = "login.html"; // توجيه إلى صفحة تسجيل الدخول
         }
+    }
+}
 
         // ======== إدارة الشريط الجانبي (للجوال) ========
         function toggleSidebar() {
@@ -273,21 +285,22 @@
 
         // ======== إرسال طلب صداقة ========
         function sendFriendRequest() {
-            const username = document.getElementById('addFriendInput').value.trim();
-            const user = users.find(u => u.username === username);
+    const username = document.getElementById('addFriendInput').value.trim();
+    const user = users.find(u => u.username === username);
 
-            if (!username) return alert('ادخل اسم المستخدم!');
-            if (!user) return alert('المستخدم غير موجود!');
-            if (user.username === currentUser.username) return alert('لا يمكن إضافة نفسك!');
-            if (user.friendRequests.includes(currentUser.username)) return alert('تم إرسال الطلب مسبقًا!');
-            if (currentUser.friends.includes(username)) return alert('هذا المستخدم صديقك بالفعل!');
+    // التحقق من وجود المستخدم
+    if (!username) return alert('ادخل اسم المستخدم!');
+    if (!user) return alert('المستخدم غير موجود!');
+    if (user.username === currentUser.username) return alert('لا يمكن إضافة نفسك!');
+    if (user.friendRequests.includes(currentUser.username)) return alert('تم إرسال الطلب مسبقًا!');
+    if (currentUser.friends.includes(username)) return alert('هذا المستخدم صديقك بالفعل!');
 
-            user.friendRequests.push(currentUser.username);
-            localStorage.setItem('users', JSON.stringify(users));
-            alert('تم إرسال طلب الصداقة!');
-            document.getElementById('addFriendInput').value = '';
-        }
-
+    // إرسال طلب الصداقة
+    user.friendRequests.push(currentUser.username);
+    localStorage.setItem('users', JSON.stringify(users));
+    alert('تم إرسال طلب الصداقة!');
+    document.getElementById('addFriendInput').value = '';
+}
         // ======== قبول طلب صداقة ========
         function acceptFriendRequest(username) {
             const user = users.find(u => u.username === username);
