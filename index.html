@@ -173,6 +173,23 @@
             box-shadow: 0 0 15px rgba(33,150,243,0.3);
             outline: none;
         }
+
+        .reset-btn {
+            background: #ff4757;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,71,87,0.4);
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -248,6 +265,11 @@
                 <input type="number" class="form-input" id="score2" placeholder="أهداف الفريق الثاني">
                 
                 <button class="tab-btn" onclick="addMatch()" style="width: 100%; margin-top: 20px;">💾 حفظ النتيجة</button>
+
+                <!-- زر إعادة التعيين -->
+                <div style="margin-top: 40px; text-align: center;">
+                    <button class="reset-btn" onclick="resetData()">⚠️ إعادة تعيين جميع البيانات</button>
+                </div>
             </div>
         </div>
     </div>
@@ -384,6 +406,20 @@
             
             document.getElementById('score1').value = '';
             document.getElementById('score2').value = '';
+        }
+
+        // ♻️ Reset Data
+        function resetData() {
+            if(confirm('هل تريد حذف جميع البيانات؟ سيتم فقدان كل المعلومات بشكل دائم!')) {
+                database.ref('teams').remove();
+                database.ref('matches').remove();
+                teams = [];
+                matches = [];
+                updateRanking();
+                updateMatches();
+                updateTeamOptions();
+                alert('✅ تم إعادة التعيين بنجاح!');
+            }
         }
 
         // 🎮 Tab Control
