@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دوري الأبطال ⚽</title>
+    <style>
+        :root {
+            --main-color: #2c3e50;
+            --accent-color: #3498db;
+            --text-color: #333;
+            --background: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--background);
+        }
+
+        .banner {
+            background: url('blue.png') no-repeat center center/cover;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .navbar {
+            background: var(--main-color);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .navbar button {
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .navbar button:hover {
+            background: #2980b9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: var(--main-color);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .error-msg {
+            color: red;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- البنر -->
+    <div class="banner">
+        <h1>دوري الأبطال ⚽</h1>
+    </div>
+
+    <!-- شريط التنقل -->
+    <div class="navbar">
+        <button onclick="showSection('ranking')">الترتيب</button>
+        <button onclick="showSection('groups')">المجموعات</button>
+        <button onclick="showSection('results')">النتائج</button>
+        <button onclick="window.location.href='admin.html'">الإدارة</button>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="container">
+        <!-- الترتيب -->
+        <div class="section" id="rankingSection">
+            <h2>جدول الترتيب</h2>
+            <div id="rankingContainer"></div>
+        </div>
+
+        <!-- المجموعات -->
+        <div class="section" id="groupsSection" style="display: none;">
+            <h2>المجموعات</h2>
+            <div id="groupsContainer"></div>
+        </div>
+
+        <!-- النتائج -->
+        <div class="section" id="resultsSection" style="display: none;">
+            <h2>النتائج</h2>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+<script>
+// بيانات التخزين
+let teams = JSON.parse(localStorage.getItem('teams')) || [];
+let matches = JSON.parse(localStorage.getItem('matches')) || [];
+
+// تهيئة المجموعات
+const groups = ['A', 'B', 'C', 'D'];
+
+// وظائف الإدارة
+function showSection(section) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(`${section}Section`).style.display = 'block';
+    updateTables();
+}
+
+function updateTables() {
+    const rankingContainer = document.getElementById('rankingContainer');
+    const groupsContainer = document.getElementById('groupsContainer');
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    // الترتيب العام
+    const sortedTeams = teams.sort((a, b) => b.points - a.points);
+    rankingContainer.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>الترتيب</th>
+                    <th>الفريق</th>
+                    <th>لعب</th>
+                    <th>فوز</th>
+                    <th>تعادل</th>
+                    <th>خسارة</th>
+                    <th>له</th>
+                    <th>عليه</th>
+                    <th>النقاط</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedTeams.map((team, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${team.name}</td>
+                        <td>${team.matchesPlayed}</td>
+                        <td>${Math.floor((team.points - (team.points % 3)) / 3)}</td>
+                        <td>${team.points % 3}</td>
+                        <td>${team.matchesPlayed - Math.floor(team.points / 3) - (team.points % 3)}</td>
+                        <td>${team.goalsFor}</td>
+                        <td>${team.goalsAgainst}</td>
+                        <td><strong>${team.points}</strong></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    // المجموعات
+    groupsContainer.innerHTML = groups.map(group => {
+        const groupTeams = teams
+            .filter(t => t.group === group)
+            .sort((a, b) => b.points - a.points);
+        
+        return `
+            <h3>المجموعة ${group}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الترتيب</th>
+                        <th>الفريق</th>
+                        <th>لعب</th>
+                        <th>فوز</th>
+                        <th>تعادل</th>
+                        <th>خسارة</th>
+                        <th>له</th>
+                        <th>عليه</th>
+                        <th>النقاط</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${groupTeams.map((team, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${team.name}</td>
+                            <td>${team.matchesPlayed}</td>
+                            <td>${Math.floor((team.points - (team.points % 3)) / 3)}</td>
+                            <td>${team.points % 3}</td>
+                            <td>${team.matchesPlayed - Math.floor(team.points / 3) - (team.points % 3)}</td>
+                            <td>${team.goalsFor}</td>
+                            <td>${team.goalsAgainst}</td>
+                            <td><strong>${team.points}</strong></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }).join('');
+
+    // النتائج
+    resultsContainer.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>الفريق 1</th>
+                    <th>النتيجة</th>
+                    <th>الفريق 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${matches.map(match => {
+                    const home = teams.find(t => t.id === match.home);
+                    const away = teams.find(t => t.id === match.away);
+                    return `
+                        <tr>
+                            <td>${home.name}</td>
+                            <td>${match.homeGoals} - ${match.awayGoals}</td>
+                            <td>${away.name}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// التهيئة الأولية
+updateTables();
+</script>
+</body>
+</html>
