@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة ريسائل</title>
+    <title>منصة رسائل</title>
     <style>
-        /* التصميم العام */
         :root {
             --bg-color: #36393f;
             --sidebar-color: #2f3136;
@@ -60,20 +59,20 @@
             overflow-y: auto;
         }
 
-        /* قائمة الأصدقاء */
-        .friends-list {
-            margin-top: 1rem;
-        }
-
         .friend-item {
-            padding: 0.5rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            background: #40444b;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
-        .friend-item:hover {
-            background: rgba(255,255,255,0.05);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* منطقة المحادثة */
@@ -81,11 +80,6 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-        }
-
-        .chat-header {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(0,0,0,0.2);
         }
 
         .messages-container {
@@ -118,11 +112,6 @@
             max-width: 70%;
         }
 
-        .message-sender {
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-
         /* إدخال الرسائل */
         .message-input-container {
             padding: 1rem;
@@ -136,28 +125,6 @@
             border: none;
             background: #40444b;
             color: var(--text-color);
-        }
-
-        /* إعدادات المستخدم */
-        .settings-modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--sidebar-color);
-            padding: 2rem;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .settings-modal input {
-            width: 100%;
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            border-radius: 5px;
-            border: 1px solid #40444b;
         }
 
         /* تصميم متجاوب */
@@ -175,207 +142,156 @@
             .sidebar.active {
                 left: 0;
             }
-
-            .chat-area {
-                margin-left: 0;
-            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="navbar">
-        <button onclick="toggleSidebar()">القائمة</button>
+        <button onclick="toggleSidebar()">☰</button>
         <button onclick="openSettings()">الإعدادات</button>
     </div>
 
     <div class="container">
+        <!-- الشريط الجانبي -->
         <div class="sidebar" id="sidebar">
-            <h2>الأصدقاء</h2>
-            <div class="friends-list" id="friendsList"></div>
-            <h2>طلبات الصداقة</h2>
-            <div class="friend-requests" id="friendRequests"></div>
-            <h2>إضافة صديق</h2>
-            <input type="text" id="addFriendInput" placeholder="اسم المستخدم">
-            <button onclick="sendFriendRequest()">إرسال طلب</button>
+            <h3>طلبات الصداقة الواردة</h3>
+            <div id="incomingRequests"></div>
+
+            <h3>أصدقاؤك</h3>
+            <div id="friendsList"></div>
+
+            <h3>إضافة صديق جديد</h3>
+            <input type="text" id="friendUsername" placeholder="اسم المستخدم">
+            <button onclick="sendFriendRequest()" style="margin-top: 10px;">إرسال طلب</button>
         </div>
 
+        <!-- منطقة المحادثة -->
         <div class="chat-area">
             <div class="chat-header">
-                <h2 id="chatWith">محادثة مع <span id="friendName"></span></h2>
+                <h2 id="chatTitle">مرحبًا، اختر محادثة لتبدأ!</h2>
             </div>
             <div class="messages-container" id="messagesContainer"></div>
             <div class="message-input-container">
-                <input type="text" id="messageInput" class="message-input" placeholder="اكتب رسالة...">
+                <input type="text" id="messageInput" class="message-input" placeholder="اكتب رسالة..." disabled>
             </div>
         </div>
     </div>
 
-    <!-- نافذة الإعدادات -->
-    <div class="settings-modal" id="settingsModal">
-        <h2>الإعدادات ⚙️</h2>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="email" id="email" placeholder="البريد الإلكتروني">
-        <input type="password" id="password" placeholder="كلمة المرور الجديدة">
-        <button onclick="saveSettings()">حفظ التغييرات</button>
-        <button onclick="resetData()">إعادة تعيين البيانات</button>
-        <button onclick="closeSettings()">إغلاق</button>
-    </div>
-
     <script>
-        // بيانات التطبيق
+        // البيانات الأساسية
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let messages = JSON.parse(localStorage.getItem('messages')) || {};
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        let currentChatUser = null;
+        let currentChat = null;
 
-        // تهيئة التطبيق
+        // التهيئة الأولية
         if (!currentUser) window.location.href = "login.html";
         else {
             updateUserData();
-            showFriendsList();
-            showFriendRequests();
+            renderFriends();
+            renderRequests();
         }
 
-        // ======== تحديث بيانات المستخدم من localStorage ========
+        // تحديث بيانات المستخدم
         function updateUserData() {
-    // تحميل بيانات المستخدمين من localStorage
-    users = JSON.parse(localStorage.getItem('users')) || [];
-
-    // البحث عن المستخدم الحالي في القائمة المحدثة
-    if (currentUser) {
-        const updatedUser = users.find(u => u.username === currentUser.username);
-        if (updatedUser) {
-            currentUser = updatedUser; // تحديث بيانات المستخدم الحالي
-            localStorage.setItem('currentUser', JSON.stringify(currentUser)); // حفظ التحديث
-        } else {
-            alert('المستخدم الحالي غير موجود في قاعدة البيانات!');
-            window.location.href = "login.html"; // توجيه إلى صفحة تسجيل الدخول
-        }
-    }
-}
-
-        // ======== إدارة الشريط الجانبي (للجوال) ========
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
+            const freshUsers = JSON.parse(localStorage.getItem('users')) || [];
+            const updatedUser = freshUsers.find(u => u.username === currentUser.username);
+            if (updatedUser) {
+                currentUser = updatedUser;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
         }
 
-        // ======== عرض قائمة الأصدقاء ========
-        function showFriendsList() {
-            const friendsList = document.getElementById('friendsList');
-            friendsList.innerHTML = currentUser.friends.map(friend => `
-                <div class="friend-item" onclick="openChat('${friend}')">
-                    <span>${friend}</span>
-                    <button onclick="removeFriend('${friend}')">إزالة</button>
-                </div>
-            `).join('');
-        }
-
-        // ======== عرض طلبات الصداقة ========
-        function showFriendRequests() {
-            const friendRequests = document.getElementById('friendRequests');
-            friendRequests.innerHTML = currentUser.friendRequests.map(req => `
-                <div class="friend-item">
-                    <span>${req}</span>
-                    <button onclick="acceptFriendRequest('${req}')">✓</button>
-                    <button onclick="declineFriendRequest('${req}')">✗</button>
-                </div>
-            `).join('');
-        }
-
-        // ======== إرسال طلب صداقة ========
+        // إرسال طلب صداقة
         function sendFriendRequest() {
-    const username = document.getElementById('addFriendInput').value.trim();
-    const user = users.find(u => u.username === username);
+            const username = document.getElementById('friendUsername').value.trim();
+            const targetUser = users.find(u => u.username === username);
 
-    // التحقق من وجود المستخدم
-    if (!username) return alert('ادخل اسم المستخدم!');
-    if (!user) return alert('المستخدم غير موجود!');
-    if (user.username === currentUser.username) return alert('لا يمكن إضافة نفسك!');
-    if (user.friendRequests.includes(currentUser.username)) return alert('تم إرسال الطلب مسبقًا!');
-    if (currentUser.friends.includes(username)) return alert('هذا المستخدم صديقك بالفعل!');
+            if (!username) return alert('يرجى إدخال اسم مستخدم!');
+            if (!targetUser) return alert('المستخدم غير موجود!');
+            if (targetUser.username === currentUser.username) return alert('لا يمكن إضافة نفسك!');
+            if (targetUser.friendRequests.includes(currentUser.username)) return alert('تم إرسال الطلب مسبقًا!');
+            if (currentUser.friends.includes(username)) return alert('هذا المستخدم صديقك بالفعل!');
 
-    // إرسال طلب الصداقة
-    user.friendRequests.push(currentUser.username);
-    localStorage.setItem('users', JSON.stringify(users));
-    alert('تم إرسال طلب الصداقة!');
-    document.getElementById('addFriendInput').value = '';
-}
-        // ======== قبول طلب صداقة ========
-        function acceptFriendRequest(username) {
-            const user = users.find(u => u.username === username);
-            if (!user) return alert('المستخدم غير موجود!');
-
-            // إضافة إلى قائمة الأصدقاء
-            currentUser.friends.push(username);
-            user.friends.push(currentUser.username);
-
-            // إزالة من طلبات الصداقة
-            currentUser.friendRequests = currentUser.friendRequests.filter(req => req !== username);
-            user.friendRequests = user.friendRequests.filter(req => req !== currentUser.username);
-
+            targetUser.friendRequests.push(currentUser.username);
             localStorage.setItem('users', JSON.stringify(users));
-            updateUserData();
-            showFriendsList();
-            showFriendRequests();
+            alert('تم إرسال طلب الصداقة بنجاح!');
+            document.getElementById('friendUsername').value = '';
         }
 
-        // ======== رفض طلب صداقة ========
-        function declineFriendRequest(username) {
-            currentUser.friendRequests = currentUser.friendRequests.filter(req => req !== username);
-            const user = users.find(u => u.username === username);
-            user.friendRequests = user.friendRequests.filter(req => req !== currentUser.username);
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            updateUserData();
-            showFriendRequests();
-        }
-
-        // ======== إزالة صديق ========
-        function removeFriend(username) {
-            currentUser.friends = currentUser.friends.filter(friend => friend !== username);
-            const user = users.find(u => u.username === username);
-            user.friends = user.friends.filter(friend => friend !== currentUser.username);
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            showFriendsList();
-        }
-
-        // ======== فتح المحادثة ========
-        function openChat(friend) {
-            currentChatUser = friend;
-            document.getElementById('friendName').textContent = friend;
-            loadMessages();
-        }
-
-        // ======== تحميل الرسائل ========
-        function loadMessages() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            const chatKey = [currentUser.username, currentChatUser].sort().join('_');
-            messagesContainer.innerHTML = (messages[chatKey] || []).map(msg => `
-                <div class="message">
-                    <div class="avatar">${msg.sender[0]}</div>
-                    <div class="message-content">
-                        <div class="message-sender">${msg.sender}</div>
-                        <p>${msg.text}</p>
+        // عرض طلبات الصداقة
+        function renderRequests() {
+            const container = document.getElementById('incomingRequests');
+            container.innerHTML = currentUser.friendRequests.map(req => `
+                <div class="friend-item">
+                    ${req}
+                    <div>
+                        <button onclick="acceptRequest('${req}')">قبول</button>
+                        <button onclick="declineRequest('${req}')">رفض</button>
                     </div>
                 </div>
             `).join('');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // ======== إرسال الرسائل ========
-        document.getElementById('messageInput').addEventListener('keypress', e => {
-            if (e.key === 'Enter' && currentChatUser) {
+        // قبول طلب صداقة
+        function acceptRequest(username) {
+            const sender = users.find(u => u.username === username);
+            
+            currentUser.friends.push(username);
+            sender.friends.push(currentUser.username);
+            
+            currentUser.friendRequests = currentUser.friendRequests.filter(req => req !== username);
+            sender.friendRequests = sender.friendRequests.filter(req => req !== currentUser.username);
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            updateUserData();
+            renderFriends();
+            renderRequests();
+        }
+
+        // رفض طلب صداقة
+        function declineRequest(username) {
+            const sender = users.find(u => u.username === username);
+            
+            currentUser.friendRequests = currentUser.friendRequests.filter(req => req !== username);
+            sender.friendRequests = sender.friendRequests.filter(req => req !== currentUser.username);
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            renderRequests();
+        }
+
+        // عرض قائمة الأصدقاء
+        function renderFriends() {
+            const container = document.getElementById('friendsList');
+            container.innerHTML = currentUser.friends.map(friend => `
+                <div class="friend-item">
+                    ${friend}
+                    <button onclick="startChat('${friend}')">محادثة</button>
+                </div>
+            `).join('');
+        }
+
+        // بدء محادثة
+        function startChat(friend) {
+            currentChat = friend;
+            document.getElementById('chatTitle').textContent = `محادثة مع ${friend}`;
+            document.getElementById('messageInput').disabled = false;
+            loadMessages();
+        }
+
+        // إرسال رسالة
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && currentChat) {
                 const message = e.target.value.trim();
                 if (message) {
-                    const chatKey = [currentUser.username, currentChatUser].sort().join('_');
-                    const newMessage = {
-                        text: message,
+                    const chatKey = [currentUser.username, currentChat].sort().join('_');
+                    if (!messages[chatKey]) messages[chatKey] = [];
+                    messages[chatKey].push({
                         sender: currentUser.username,
+                        text: message,
                         time: new Date().toLocaleTimeString()
-                    };
-                    messages[chatKey] = [...(messages[chatKey] || []), newMessage];
+                    });
                     localStorage.setItem('messages', JSON.stringify(messages));
                     e.target.value = '';
                     loadMessages();
@@ -383,36 +299,31 @@
             }
         });
 
-        // ======== إدارة الإعدادات ========
-        function openSettings() {
-            document.getElementById('settingsModal').style.display = 'block';
-            document.getElementById('username').value = currentUser.username;
-            document.getElementById('email').value = currentUser.email;
+        // تحميل الرسائل
+        function loadMessages() {
+            const container = document.getElementById('messagesContainer');
+            const chatKey = [currentUser.username, currentChat].sort().join('_');
+            container.innerHTML = (messages[chatKey] || []).map(msg => `
+                <div class="message">
+                    <div class="avatar">${msg.sender[0]}</div>
+                    <div class="message-content">
+                        <div class="message-sender">${msg.sender}</div>
+                        <p>${msg.text}</p>
+                        <small>${msg.time}</small>
+                    </div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
         }
 
-        function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
+        // إدارة الشريط الجانبي
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
         }
 
-        function saveSettings() {
-            const newUsername = document.getElementById('username').value;
-            const newEmail = document.getElementById('email').value;
-            const newPassword = document.getElementById('password').value;
-
-            // تحديث بيانات المستخدم
-            currentUser.username = newUsername;
-            currentUser.email = newEmail;
-            if (newPassword) currentUser.password = newPassword;
-
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            alert('تم حفظ التغييرات ✅');
-            closeSettings();
-        }
-
+        // إعادة تعيين البيانات
         function resetData() {
             localStorage.clear();
-            alert('تم إعادة تعيين جميع البيانات ♻️');
             window.location.reload();
         }
     </script>
