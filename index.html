@@ -3,341 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الدوري المتكامل</title>
+    <title>نظام إدارة الدوري</title>
     <style>
-        :root {
-            --primary: #2196F3;
-            --secondary: #1976D2;
-            --background: #f0f8ff;
-            --error: #ff4444;
-        }
-
         body {
-            margin: 0;
             font-family: 'Tajawal', sans-serif;
-            background: var(--background);
+            background: #f0f8ff;
+            margin: 0;
+            padding: 20px;
         }
-
-        .banner {
-            height: 200px;
-            background: url('blue.png') center/cover;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .nav-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .tab-btn {
-            padding: 0.8rem 2rem;
-            border: none;
-            border-radius: 25px;
-            background: var(--primary);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .tab-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(33,150,243,0.3);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 2rem;
-            margin: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            animation: fadeIn 0.5s;
-        }
-
-        .active-tab {
-            display: block;
-        }
-
-        .admin-panel {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
         .form-group {
-            margin: 1rem 0;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 1rem;
-            align-items: center;
+            margin: 10px 0;
         }
-
+        input, select, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
+            margin-top: 20px;
         }
-
         th, td {
-            padding: 1rem;
+            padding: 10px;
+            border: 1px solid #ddd;
             text-align: center;
-            border-bottom: 1px solid #eee;
-        }
-
-        .delete-btn {
-            background: var(--error);
-            padding: 0.3rem 0.8rem;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
     </style>
-    <!-- إضافة مكتبة Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-    <div class="banner"></div>
+    <h1>نظام إدارة الدوري</h1>
 
-    <div class="nav-tabs">
-        <button class="tab-btn" onclick="showTab('ranking')">الترتيب</button>
-        <button class="tab-btn" onclick="showTab('matches')">المباريات</button>
-        <button class="tab-btn" onclick="handleAdminTab()">الإدارة</button>
+    <!-- إضافة فريق جديد -->
+    <div class="form-group">
+        <input type="text" id="newTeam" placeholder="اسم الفريق الجديد">
+        <button onclick="addTeam()">➕ إضافة فريق</button>
     </div>
 
-    <!-- تبويب الترتيب -->
-    <div id="ranking" class="tab-content active-tab">
-        <h2>جدول الترتيب 📊</h2>
-        <table id="rankingTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>الفريق</th>
-                    <th>النقاط</th>
-                    <th>الأهداف</th>
-                    <th>المباريات</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- تبويب المباريات -->
-    <div id="matches" class="tab-content">
-        <h2>سجل المباريات ⚽</h2>
-        <table id="matchesTable">
-            <thead>
-                <tr>
-                    <th>الفريق الأول</th>
-                    <th>النتيجة</th>
-                    <th>الفريق الثاني</th>
-                    <th>التاريخ</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- تبويب الإدارة -->
-    <div id="admin" class="tab-content">
-        <div class="admin-panel">
-            <div id="adminLogin">
-                <h2>🔒 التحقق الإداري</h2>
-                <div class="form-group">
-                    <label>أدخل الكود:</label>
-                    <input type="password" id="adminCode" placeholder="الكود المرسل إلى الديسكورد">
-                </div>
-                <button class="tab-btn" onclick="verifyAdmin()">تحقق</button>
-            </div>
-
-            <div id="adminControls" style="display: none;">
-                <h2>👨💻 لوحة التحكم</h2>
-                
-                <!-- إدارة الفرق -->
-                <h3>فرق الدوري</h3>
-                <div id="teamsList"></div>
-                
-                <!-- إضافة فريق جديد -->
-                <div class="form-group">
-                    <input type="text" id="newTeam" placeholder="اسم الفريق الجديد">
-                    <button class="tab-btn" onclick="addTeam()">➕ إضافة</button>
-                </div>
-
-                <!-- تسجيل المباريات -->
-                <h3>تسجيل نتيجة مباراة</h3>
-                <div class="form-group">
-                    <select id="team1"></select>
-                    <input type="number" id="score1" placeholder="الأهداف" min="0">
-                </div>
-                <div class="form-group">
-                    <select id="team2"></select>
-                    <input type="number" id="score2" placeholder="الأهداف" min="0">
-                </div>
-                <button class="tab-btn" onclick="addMatch()">💾 حفظ النتيجة</button>
-            </div>
-        </div>
-    </div>
+    <!-- عرض الفرق -->
+    <table id="teamsTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>الفريق</th>
+                <th>النقاط</th>
+                <th>الأهداف</th>
+                <th>المباريات</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
     <script>
-        // ⚙️ إعدادات Firebase - استبدل بالقيم الخاصة بك
-   // ⚙️ إعدادات Firebase - استبدل بالقيم الخاصة بك
-const firebaseConfig = {
-  apiKey: "AIzaSyAdIVB8SQ8IagkCRzVeiD0XW6sSpD41JQU",
-  authDomain: "land-fadaa.firebaseapp.com",
-  databaseURL: "https://land-fadaa-default-rtdb.firebaseio.com",
-  projectId: "land-fadaa",
-  storageBucket: "land-fadaa.firebasestorage.app",
-  messagingSenderId: "576344834439",
-  appId: "1:576344834439:web:992bc6d285975ac1c95322",
-  measurementId: "G-H6JFPSTKPC"
-};
+        // تحميل الفرق من LocalStorage
+        function loadTeams() {
+            const teams = JSON.parse(localStorage.getItem('teams')) || [];
+            const tbody = document.querySelector('#teamsTable tbody');
+            tbody.innerHTML = teams.map((team, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${team.name}</td>
+                    <td>${team.wins * 2 + team.goals}</td>
+                    <td>${team.goals}</td>
+                    <td>${team.matches}</td>
+                </tr>
+            `).join('');
+        }
 
-// 🔗 رابط الويب هوك - استبدل برابط الويب هوك الخاص بك
-const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
+        // إضافة فريق جديد
+        function addTeam() {
+            const teamName = document.getElementById('newTeam').value.trim();
+            if (teamName) {
+                const teams = JSON.parse(localStorage.getItem('teams')) || [];
+                teams.push({ name: teamName, wins: 0, goals: 0, matches: 0 });
+                localStorage.setItem('teams', JSON.stringify(teams));
+                document.getElementById('newTeam').value = '';
+                loadTeams();
+            }
+        }
 
-// تهيئة Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+        // تحديث الجدول كل 5 ثواني
+        setInterval(loadTeams, 5000);
 
-// 🔄 بيانات التطبيق
-let teams = [];
-let matches = [];
-let currentCode = null;
-
-// 📥 تحميل البيانات من Firebase
-function loadData() {
-    database.ref('teams').on('value', (snapshot) => {
-        teams = snapshot.val() || [];
-        updateTables();
-    });
-
-    database.ref('matches').on('value', (snapshot) => {
-        matches = snapshot.val() || [];
-        updateTables();
-    });
-}
-
-// 💾 حفظ البيانات في Firebase
-function saveData() {
-    database.ref('teams').set(teams);
-    database.ref('matches').set(matches);
-}
-
-// ➕ إضافة فريق جديد
-function addTeam() {
-    const teamName = document.getElementById('newTeam').value.trim();
-    if (!teamName) return alert('⚠️ أدخل اسم الفريق');
-    
-    teams.push({
-        name: teamName,
-        wins: 0,
-        goals: 0,
-        matches: 0
-    });
-    
-    saveData();
-    updateTeamOptions();
-    document.getElementById('newTeam').value = '';
-}
-
-// 🗑️ حذف فريق
-function deleteTeam(index) {
-    if(confirm('هل تريد حذف هذا الفريق؟')) {
-        teams.splice(index, 1);
-        saveData();
-        updateTeamList();
-    }
-}
-
-// 🔄 تحديث الجداول
-function updateTables() {
-    updateRanking();
-    updateMatches();
-}
-
-// 📊 تحديث جدول الترتيب
-function updateRanking() {
-    teams.sort((a, b) => {
-        const pointsDiff = (b.wins * 2 + b.goals) - (a.wins * 2 + a.goals);
-        return pointsDiff !== 0 ? pointsDiff : b.goals - a.goals;
-    });
-
-    const tbody = document.querySelector('#rankingTable tbody');
-    tbody.innerHTML = teams.map((team, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${team.name}</td>
-            <td>${team.wins * 2 + team.goals}</td>
-            <td>${team.goals}</td>
-            <td>${team.matches}</td>
-        </tr>
-    `).join('');
-}
-
-// ⚽ تحديث جدول المباريات
-function updateMatches() {
-    const tbody = document.querySelector('#matchesTable tbody');
-    tbody.innerHTML = matches.map(match => `
-        <tr>
-            <td>${match.team1}</td>
-            <td>${match.score1} - ${match.score2}</td>
-            <td>${match.team2}</td>
-            <td>${new Date().toLocaleDateString('ar-EG')}</td>
-        </tr>
-    `).join('');
-}
-
-// 🔄 تحديث خيارات الفرق
-function updateTeamOptions() {
-    const options = teams.map(team => `<option>${team.name}</option>`).join('');
-    document.getElementById('team1').innerHTML = options;
-    document.getElementById('team2').innerHTML = options;
-}
-
-// 👨💻 نظام التحكم الإداري
-async function sendVerificationCode() {
-    try {
-        currentCode = Math.floor(1000 + Math.random() * 9000);
-        
-        const response = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({content: `🔐 كود التحقق: ||${currentCode}||`})
-        });
-
-        if (!response.ok) throw new Error('فشل الإرسال');
-        alert('✅ تم إرسال الكود إلى الديسكورد!');
-    } catch (error) {
-        alert('❌ فشل الإرسال! تأكد من:\n1. اتصال الإنترنت\n2. صحة رابط الويب هوك');
-    }
-}
-
-function verifyAdmin() {
-    const enteredCode = document.getElementById('adminCode').value;
-    if(enteredCode == currentCode) {
-        document.getElementById('adminLogin').style.display = 'none';
-        document.getElementById('adminControls').style.display = 'block';
-        updateTeamList();
-        updateTeamOptions();
-    } else {
-        alert('❌ الكود غير صحيح!');
-    }
-}
-
-// ⚙️ التهيئة الأولية
-window.onload = () => {
-    loadData();
-    updateTeamOptions();
-};
+        // التحميل الأولي للفرق
+        loadTeams();
+    </script>
+</body>
+</html>
