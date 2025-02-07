@@ -99,21 +99,14 @@
             cursor: pointer;
         }
 
-        .refresh-section {
-            text-align: center;
-            margin: 20px;
-        }
-
-        .reset-btn {
-            background: var(--error) !important;
-            margin-top: 10px;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+    <!-- إضافة مكتبة Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
     <div class="banner"></div>
@@ -193,236 +186,158 @@
                     <input type="number" id="score2" placeholder="الأهداف" min="0">
                 </div>
                 <button class="tab-btn" onclick="addMatch()">💾 حفظ النتيجة</button>
-
-                <!-- إعادة التعيين -->
-                <div class="refresh-section">
-                    <button class="tab-btn reset-btn" onclick="resetData()">⚠️ إعادة التعيين</button>
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // استبدل هذا الرابط برابط الويب هوك الجديد
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
+        // ⚙️ إعدادات Firebase - استبدل بالقيم الخاصة بك
+   // ⚙️ إعدادات Firebase - استبدل بالقيم الخاصة بك
+const firebaseConfig = {
+  apiKey: "AIzaSyAdIVB8SQ8IagkCRzVeiD0XW6sSpD41JQU",
+  authDomain: "land-fadaa.firebaseapp.com",
+  databaseURL: "https://land-fadaa-default-rtdb.firebaseio.com",
+  projectId: "land-fadaa",
+  storageBucket: "land-fadaa.firebasestorage.app",
+  messagingSenderId: "576344834439",
+  appId: "1:576344834439:web:992bc6d285975ac1c95322",
+  measurementId: "G-H6JFPSTKPC"
+};
 
-        let currentCode = null;
-        let teams = JSON.parse(localStorage.getItem('teams')) || [];
-        let matches = JSON.parse(localStorage.getItem('matches')) || [];
+// 🔗 رابط الويب هوك - استبدل برابط الويب هوك الخاص بك
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام الحفظ والمزامنة
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// تهيئة Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-        function saveData() {
-            localStorage.setItem('teams', JSON.stringify(teams));
-            localStorage.setItem('matches', JSON.stringify(matches));
-            
-            // مزامنة بين النوافذ
-            if (typeof BroadcastChannel !== 'undefined') {
-                const channel = new BroadcastChannel('league-updates');
-                channel.postMessage({ action: 'update' });
-            }
-            
-            updateTables();
-        }
+// 🔄 بيانات التطبيق
+let teams = [];
+let matches = [];
+let currentCode = null;
 
-        function resetData() {
-            if(confirm('هل تريد مسح جميع البيانات؟ سيتم فقدان كل المعلومات!')) {
-                localStorage.removeItem('teams');
-                localStorage.removeItem('matches');
-                teams = [];
-                matches = [];
-                updateTables();
-                alert('تم مسح جميع البيانات بنجاح');
-                location.reload();
-            }
-        }
+// 📥 تحميل البيانات من Firebase
+function loadData() {
+    database.ref('teams').on('value', (snapshot) => {
+        teams = snapshot.val() || [];
+        updateTables();
+    });
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام الإدارة
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    database.ref('matches').on('value', (snapshot) => {
+        matches = snapshot.val() || [];
+        updateTables();
+    });
+}
 
-        async function sendVerificationCode() {
-            try {
-                currentCode = Math.floor(1000 + Math.random() * 9000);
-                
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({content: `🔐 كود التحقق: ||${currentCode}||`})
-                });
+// 💾 حفظ البيانات في Firebase
+function saveData() {
+    database.ref('teams').set(teams);
+    database.ref('matches').set(matches);
+}
 
-                if (!response.ok) throw new Error('فشل الإرسال');
-                alert('✅ تم إرسال الكود إلى الديسكورد!');
-            } catch (error) {
-                alert('❌ فشل الإرسال! تأكد من:\n1. اتصال الإنترنت\n2. صحة رابط الويب هوك');
-            }
-        }
+// ➕ إضافة فريق جديد
+function addTeam() {
+    const teamName = document.getElementById('newTeam').value.trim();
+    if (!teamName) return alert('⚠️ أدخل اسم الفريق');
+    
+    teams.push({
+        name: teamName,
+        wins: 0,
+        goals: 0,
+        matches: 0
+    });
+    
+    saveData();
+    updateTeamOptions();
+    document.getElementById('newTeam').value = '';
+}
 
-        function verifyAdmin() {
-            const enteredCode = document.getElementById('adminCode').value;
-            if(enteredCode == currentCode) {
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminControls').style.display = 'block';
-                updateTeamList();
-                updateTeamOptions();
-            } else {
-                alert('❌ الكود غير صحيح!');
-            }
-        }
+// 🗑️ حذف فريق
+function deleteTeam(index) {
+    if(confirm('هل تريد حذف هذا الفريق؟')) {
+        teams.splice(index, 1);
+        saveData();
+        updateTeamList();
+    }
+}
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام الفرق والمباريات
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔄 تحديث الجداول
+function updateTables() {
+    updateRanking();
+    updateMatches();
+}
 
-        function addTeam() {
-            const teamName = document.getElementById('newTeam').value.trim();
-            if (!teamName) return alert('⚠️ أدخل اسم الفريق');
-            
-            teams.push({
-                name: teamName,
-                wins: 0,
-                goals: 0,
-                matches: 0
-            });
-            
-            saveData();
-            updateTeamOptions();
-            document.getElementById('newTeam').value = '';
-        }
+// 📊 تحديث جدول الترتيب
+function updateRanking() {
+    teams.sort((a, b) => {
+        const pointsDiff = (b.wins * 2 + b.goals) - (a.wins * 2 + a.goals);
+        return pointsDiff !== 0 ? pointsDiff : b.goals - a.goals;
+    });
 
-        function deleteTeam(index) {
-            if(confirm('هل تريد حذف هذا الفريق؟')) {
-                teams.splice(index, 1);
-                saveData();
-                updateTeamList();
-            }
-        }
+    const tbody = document.querySelector('#rankingTable tbody');
+    tbody.innerHTML = teams.map((team, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${team.name}</td>
+            <td>${team.wins * 2 + team.goals}</td>
+            <td>${team.goals}</td>
+            <td>${team.matches}</td>
+        </tr>
+    `).join('');
+}
 
-        function updateTeamList() {
-            const teamsList = document.getElementById('teamsList');
-            teamsList.innerHTML = teams.map((team, index) => `
-                <div class="form-group">
-                    <span>${team.name}</span>
-                    <button class="delete-btn" onclick="deleteTeam(${index})">🗑️ حذف</button>
-                </div>
-            `).join('');
-        }
+// ⚽ تحديث جدول المباريات
+function updateMatches() {
+    const tbody = document.querySelector('#matchesTable tbody');
+    tbody.innerHTML = matches.map(match => `
+        <tr>
+            <td>${match.team1}</td>
+            <td>${match.score1} - ${match.score2}</td>
+            <td>${match.team2}</td>
+            <td>${new Date().toLocaleDateString('ar-EG')}</td>
+        </tr>
+    `).join('');
+}
 
-        function addMatch() {
-            const team1 = document.getElementById('team1').value;
-            const team2 = document.getElementById('team2').value;
-            const score1 = parseInt(document.getElementById('score1').value);
-            const score2 = parseInt(document.getElementById('score2').value);
+// 🔄 تحديث خيارات الفرق
+function updateTeamOptions() {
+    const options = teams.map(team => `<option>${team.name}</option>`).join('');
+    document.getElementById('team1').innerHTML = options;
+    document.getElementById('team2').innerHTML = options;
+}
 
-            if (!team1 || !team2 || isNaN(score1) || isNaN(score2)) {
-                return alert('⚠️ املأ جميع الحقول');
-            }
+// 👨💻 نظام التحكم الإداري
+async function sendVerificationCode() {
+    try {
+        currentCode = Math.floor(1000 + Math.random() * 9000);
+        
+        const response = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({content: `🔐 كود التحقق: ||${currentCode}||`})
+        });
 
-            // تحديث الإحصائيات
-            teams.forEach(team => {
-                if (team.name === team1) {
-                    team.goals += score1;
-                    team.matches++;
-                    if (score1 > score2) team.wins++;
-                }
-                if (team.name === team2) {
-                    team.goals += score2;
-                    team.matches++;
-                    if (score2 > score1) team.wins++;
-                }
-            });
+        if (!response.ok) throw new Error('فشل الإرسال');
+        alert('✅ تم إرسال الكود إلى الديسكورد!');
+    } catch (error) {
+        alert('❌ فشل الإرسال! تأكد من:\n1. اتصال الإنترنت\n2. صحة رابط الويب هوك');
+    }
+}
 
-            matches.push({
-                team1: team1,
-                team2: team2,
-                score1: score1,
-                score2: score2,
-                date: new Date().toLocaleDateString('ar-EG')
-            });
+function verifyAdmin() {
+    const enteredCode = document.getElementById('adminCode').value;
+    if(enteredCode == currentCode) {
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminControls').style.display = 'block';
+        updateTeamList();
+        updateTeamOptions();
+    } else {
+        alert('❌ الكود غير صحيح!');
+    }
+}
 
-            saveData();
-            document.getElementById('score1').value = '';
-            document.getElementById('score2').value = '';
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام التحديثات
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        function updateTables() {
-            updateRanking();
-            updateMatches();
-        }
-
-        function updateRanking() {
-            teams.sort((a, b) => {
-                const pointsDiff = (b.wins * 2 + b.goals) - (a.wins * 2 + a.goals);
-                return pointsDiff !== 0 ? pointsDiff : b.goals - a.goals;
-            });
-
-            const tbody = document.querySelector('#rankingTable tbody');
-            tbody.innerHTML = teams.map((team, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${team.name}</td>
-                    <td>${team.wins * 2 + team.goals}</td>
-                    <td>${team.goals}</td>
-                    <td>${team.matches}</td>
-                </tr>
-            `).join('');
-        }
-
-        function updateMatches() {
-            const tbody = document.querySelector('#matchesTable tbody');
-            tbody.innerHTML = matches.map(match => `
-                <tr>
-                    <td>${match.team1}</td>
-                    <td>${match.score1} - ${match.score2}</td>
-                    <td>${match.team2}</td>
-                    <td>${match.date}</td>
-                </tr>
-            `).join('');
-        }
-
-        function updateTeamOptions() {
-            const options = teams.map(team => `<option>${team.name}</option>`).join('');
-            document.getElementById('team1').innerHTML = options;
-            document.getElementById('team2').innerHTML = options;
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام التحكم العام
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        function handleAdminTab() {
-            sendVerificationCode();
-            showTab('admin');
-        }
-
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active-tab');
-            });
-            document.getElementById(tabId).classList.add('active-tab');
-        }
-
-        // التهيئة الأولية
-        window.onload = () => {
-            updateTables();
-            updateTeamOptions();
-            
-            // إعداد المزامنة
-            if (typeof BroadcastChannel !== 'undefined') {
-                const channel = new BroadcastChannel('league-updates');
-                channel.onmessage = () => {
-                    teams = JSON.parse(localStorage.getItem('teams')) || [];
-                    matches = JSON.parse(localStorage.getItem('matches')) || [];
-                    updateTables();
-                }
-            }
-        };
-    </script>
-</body>
-</html>
+// ⚙️ التهيئة الأولية
+window.onload = () => {
+    loadData();
+    updateTeamOptions();
+};
