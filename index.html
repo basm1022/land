@@ -2,113 +2,106 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>الدوري الممتاز</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الدوري</title>
     <style>
         :root {
-            --main-color: #2196F3;
-            --dark-color: #1976D2;
-            --light-color: #BBDEFB;
-        }
-
-        * {
-            box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
+            --primary: #2196F3;
+            --secondary: #1976D2;
+            --background: #f0f8ff;
         }
 
         body {
             margin: 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            font-family: 'Tajawal', sans-serif;
+            background: var(--background);
         }
 
-        .banner {
-            width: 100%;
-            height: 200px;
-            background: url('blue.png') center/cover;
+        .header {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .nav-tabs {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            padding: 20px;
-            background: rgba(255,255,255,0.9);
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .tab-btn {
-            padding: 12px 30px;
+            padding: 0.8rem 2rem;
             border: none;
-            background: var(--main-color);
-            color: white;
             border-radius: 25px;
+            background: var(--primary);
+            color: white;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 16px;
+            transition: all 0.3s;
         }
 
         .tab-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(33,150,243,0.4);
+            box-shadow: 0 5px 15px rgba(33,150,243,0.3);
         }
 
         .tab-content {
             display: none;
-            padding: 30px;
+            padding: 2rem;
+            margin: 2rem;
             background: white;
-            margin: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
-            animation: fadeIn 0.5s ease;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s;
         }
 
         .active-tab {
             display: block;
         }
 
+        .admin-panel {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin: 1rem 0;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        input, select {
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 1rem 0;
         }
 
         th, td {
-            padding: 15px;
+            padding: 1rem;
             text-align: center;
             border-bottom: 1px solid #eee;
         }
 
         th {
-            background: var(--main-color);
+            background: var(--primary);
             color: white;
-        }
-
-        tr:hover {
-            background: var(--light-color);
-        }
-
-        .admin-panel {
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 25px;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
-        }
-
-        .admin-input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            transition: border-color 0.3s ease;
-        }
-
-        .admin-input:focus {
-            border-color: var(--main-color);
-            outline: none;
         }
 
         @keyframes fadeIn {
@@ -118,115 +111,242 @@
     </style>
 </head>
 <body>
-    <div class="banner"></div>
-    
+    <div class="header">
+        <h1>نظام إدارة الدوري ⚽</h1>
+    </div>
+
     <div class="nav-tabs">
-        <button class="tab-btn" onclick="showTab('results')">النتائج</button>
         <button class="tab-btn" onclick="showTab('ranking')">الترتيب</button>
-        <button class="tab-btn" onclick="showTab('groups')">المجموعات</button>
+        <button class="tab-btn" onclick="showTab('matches')">المباريات</button>
         <button class="tab-btn" onclick="showTab('admin')">الإدارة</button>
     </div>
 
-    <!-- محتوى التبويبات -->
-    <div id="results" class="tab-content active-tab">
-        <h2>نتائج المباريات</h2>
-    </div>
-
-    <div id="ranking" class="tab-content">
-        <h2>جدول الترتيب</h2>
+    <!-- تبويب الترتيب -->
+    <div id="ranking" class="tab-content active-tab">
+        <h2>جدول الترتيب 📊</h2>
         <table id="rankingTable">
             <thead>
                 <tr>
-                    <th>المركز</th>
+                    <th>#</th>
                     <th>الفريق</th>
                     <th>النقاط</th>
                     <th>الأهداف</th>
+                    <th>المباريات</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
-    <div id="groups" class="tab-content">
-        <h2>المجموعات</h2>
+    <!-- تبويب المباريات -->
+    <div id="matches" class="tab-content">
+        <h2>سجل المباريات ⚽</h2>
+        <table id="matchesTable">
+            <thead>
+                <tr>
+                    <th>الفريق الأول</th>
+                    <th>النتيجة</th>
+                    <th>الفريق الثاني</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
+    <!-- تبويب الإدارة -->
     <div id="admin" class="tab-content">
         <div class="admin-panel">
-            <h2>لوحة الإدارة</h2>
-            <input type="password" class="admin-input" placeholder="كود التحقق">
-            <button class="tab-btn" onclick="generateCode()">إنشاء كود تحقق</button>
+            <div id="adminLogin">
+                <h2>🔒 التحقق الإداري</h2>
+                <div class="form-group">
+                    <label>أدخل الكود:</label>
+                    <input type="password" id="adminCode" placeholder="الكود المرسل إلى الديسكورد">
+                </div>
+                <button class="tab-btn" onclick="verifyAdmin()">تحقق</button>
+                <button class="tab-btn" onclick="sendVerificationCode()">إعادة إرسال الكود</button>
+            </div>
+
+            <div id="adminControls" style="display: none;">
+                <h2>👨💻 لوحة التحكم</h2>
+                
+                <h3>➕ إضافة فريق جديد</h3>
+                <div class="form-group">
+                    <label>اسم الفريق:</label>
+                    <input type="text" id="newTeam">
+                </div>
+                <button class="tab-btn" onclick="addTeam()">إضافة</button>
+
+                <h3>📝 تسجيل نتيجة مباراة</h3>
+                <div class="form-group">
+                    <label>الفريق الأول:</label>
+                    <select id="team1"></select>
+                </div>
+                <div class="form-group">
+                    <label>الفريق الثاني:</label>
+                    <select id="team2"></select>
+                </div>
+                <div class="form-group">
+                    <label>أهداف الفريق 1:</label>
+                    <input type="number" id="score1" min="0">
+                </div>
+                <div class="form-group">
+                    <label>أهداف الفريق 2:</label>
+                    <input type="number" id="score2" min="0">
+                </div>
+                <button class="tab-btn" onclick="addMatch()">حفظ النتيجة</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // بيانات الفرق المؤقتة
-        let teams = [
-            { name: "الفريق أ", wins: 3, goals: 7 },
-            { name: "الفريق ب", wins: 2, goals: 5 },
-            { name: "الفريق ج", wins: 4, goals: 9 }
-        ];
+        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
+        let currentCode = null;
+        let teams = [];
+        let matches = [];
 
-        function calculatePoints(team) {
-            return (team.wins * 2) + team.goals;
+        // توليد وإرسال الكود
+        async function sendVerificationCode() {
+            try {
+                currentCode = Math.floor(1000 + Math.random() * 9000);
+                
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        content: `🔐 كود التحقق: ||${currentCode}||`
+                    })
+                });
+
+                if (!response.ok) throw new Error('فشل الإرسال');
+                alert('✅ تم إرسال الكود إلى الديسكورد!');
+            } catch (error) {
+                alert('❌ فشل الإرسال! تأكد من اتصال الإنترنت');
+            }
+        }
+
+        // التحقق من الكود
+        function verifyAdmin() {
+            const enteredCode = document.getElementById('adminCode').value;
+            if(enteredCode == currentCode) {
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminControls').style.display = 'block';
+                updateTeamOptions();
+            } else {
+                alert('❌ الكود غير صحيح!');
+                sendVerificationCode();
+            }
+        }
+
+        // إضافة فريق
+        function addTeam() {
+            const teamName = document.getElementById('newTeam').value.trim();
+            if (!teamName) return alert('⚠️ أدخل اسم الفريق');
+            
+            teams.push({
+                name: teamName,
+                wins: 0,
+                goals: 0,
+                matches: 0
+            });
+            
+            updateTables();
+            updateTeamOptions();
+            document.getElementById('newTeam').value = '';
+        }
+
+        // تسجيل مباراة
+        function addMatch() {
+            const team1 = document.getElementById('team1').value;
+            const team2 = document.getElementById('team2').value;
+            const score1 = parseInt(document.getElementById('score1').value);
+            const score2 = parseInt(document.getElementById('score2').value);
+
+            if (!team1 || !team2 || isNaN(score1) || isNaN(score2)) {
+                return alert('⚠️ املأ جميع الحقول');
+            }
+
+            // تحديث الإحصائيات
+            teams.forEach(team => {
+                if (team.name === team1) {
+                    team.goals += score1;
+                    team.matches++;
+                    if (score1 > score2) team.wins++;
+                }
+                if (team.name === team2) {
+                    team.goals += score2;
+                    team.matches++;
+                    if (score2 > score1) team.wins++;
+                }
+            });
+
+            matches.push({
+                team1: team1,
+                team2: team2,
+                score1: score1,
+                score2: score2,
+                date: new Date().toLocaleDateString('ar-EG')
+            });
+
+            updateTables();
+            document.getElementById('score1').value = '';
+            document.getElementById('score2').value = '';
+        }
+
+        // تحديث الجداول
+        function updateTables() {
+            updateRanking();
+            updateMatches();
         }
 
         function updateRanking() {
             teams.sort((a, b) => {
-                let diff = calculatePoints(b) - calculatePoints(a);
-                return diff !== 0 ? diff : b.goals - a.goals;
+                const pointsDiff = (b.wins * 2 + b.goals) - (a.wins * 2 + a.goals);
+                return pointsDiff !== 0 ? pointsDiff : b.goals - a.goals;
             });
 
-            let tbody = document.querySelector('#rankingTable tbody');
-            tbody.innerHTML = '';
-            
-            teams.forEach((team, index) => {
-                let row = `<tr>
+            const tbody = document.querySelector('#rankingTable tbody');
+            tbody.innerHTML = teams.map((team, index) => `
+                <tr>
                     <td>${index + 1}</td>
                     <td>${team.name}</td>
-                    <td>${calculatePoints(team)}</td>
+                    <td>${team.wins * 2 + team.goals}</td>
                     <td>${team.goals}</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+                    <td>${team.matches}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateMatches() {
+            const tbody = document.querySelector('#matchesTable tbody');
+            tbody.innerHTML = matches.map(match => `
+                <tr>
+                    <td>${match.team1}</td>
+                    <td>${match.score1} - ${match.score2}</td>
+                    <td>${match.team2}</td>
+                    <td>${match.date}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateTeamOptions() {
+            const options = teams.map(team => `<option>${team.name}</option>`).join('');
+            document.getElementById('team1').innerHTML = options;
+            document.getElementById('team2').innerHTML = options;
         }
 
         function showTab(tabId) {
-            if(tabId === 'admin') {
-                let code = prompt('الرجاء إدخال كود التحقق:');
-                if(code !== '1234') return alert('كود التحقق غير صحيح!');
-            }
-
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active-tab');
             });
             document.getElementById(tabId).classList.add('active-tab');
         }
 
-        async function generateCode() {
-            const code = Math.floor(1000 + Math.random() * 9000);
-            
-            // إرسال إلى ويب هوك دسكورد
-            const webhookURL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
-            
-            try {
-                await fetch(webhookURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        content: `🔐 كود التحقق للإدارة: ||${code}||`
-                    })
-                });
-                alert('تم إرسال كود التحقق إلى الإدارة!');
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
         // التهيئة الأولية
-        updateRanking();
+        window.onload = () => {
+            sendVerificationCode();
+            updateTables();
+        };
     </script>
 </body>
 </html>
