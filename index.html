@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الدوري الكامل</title>
+    <title>نظام إدارة الدوري المتكامل</title>
     <style>
         :root {
             --primary: #2196F3;
             --secondary: #1976D2;
             --background: #f0f8ff;
+            --error: #ff4444;
         }
 
         body {
@@ -91,11 +92,21 @@
         }
 
         .delete-btn {
-            background: #ff4444;
+            background: var(--error);
             padding: 0.3rem 0.8rem;
             border-radius: 5px;
             color: white;
             cursor: pointer;
+        }
+
+        .refresh-section {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .reset-btn {
+            background: var(--error) !important;
+            margin-top: 10px;
         }
 
         @keyframes fadeIn {
@@ -182,13 +193,18 @@
                     <input type="number" id="score2" placeholder="الأهداف" min="0">
                 </div>
                 <button class="tab-btn" onclick="addMatch()">💾 حفظ النتيجة</button>
+
+                <!-- إعادة التعيين -->
+                <div class="refresh-section">
+                    <button class="tab-btn reset-btn" onclick="resetData()">⚠️ إعادة التعيين</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         // إعدادات النظام
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1325843967073321082/iSjvcN3FyAliIVqlg70mp3BeuBD7YtEwB3YEkmFGbsKvHqyWqjntCV736QvNviNShAr8';
+        const WEBHOOK_URL = 'WEBHOOK_URL_HERE';
         let currentCode = null;
 
         // بيانات التطبيق
@@ -196,14 +212,37 @@
         let matches = JSON.parse(localStorage.getItem('matches')) || [];
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام الإرسال والتخزين
+        // نظام الحفظ والمزامنة
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
         function saveData() {
             localStorage.setItem('teams', JSON.stringify(teams));
             localStorage.setItem('matches', JSON.stringify(matches));
+            
+            // مزامنة بين النوافذ
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('league-updates');
+                channel.postMessage({ action: 'update' });
+            }
+            
             updateTables();
         }
+
+        function resetData() {
+            if(confirm('هل تريد مسح جميع البيانات؟ سيتم فقدان كل المعلومات!')) {
+                localStorage.removeItem('teams');
+                localStorage.removeItem('matches');
+                teams = [];
+                matches = [];
+                updateTables();
+                alert('تم مسح جميع البيانات بنجاح');
+                location.reload();
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // نظام الإدارة
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
         async function sendVerificationCode() {
             try {
@@ -222,8 +261,20 @@
             }
         }
 
+        function verifyAdmin() {
+            const enteredCode = document.getElementById('adminCode').value;
+            if(enteredCode == currentCode) {
+                document.getElementById('adminLogin').style.display = 'none';
+                document.getElementById('adminControls').style.display = 'block';
+                updateTeamList();
+                updateTeamOptions();
+            } else {
+                alert('❌ الكود غير صحيح!');
+            }
+        }
+
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام التحكم بالفرق
+        // نظام الفرق والمباريات
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
         function addTeam() {
@@ -259,10 +310,6 @@
                 </div>
             `).join('');
         }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // نظام المباريات والترتيب
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
         function addMatch() {
             const team1 = document.getElementById('team1').value;
@@ -301,6 +348,10 @@
             document.getElementById('score2').value = '';
         }
 
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // نظام التحديثات
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
         function updateTables() {
             updateRanking();
             updateMatches();
@@ -336,6 +387,12 @@
             `).join('');
         }
 
+        function updateTeamOptions() {
+            const options = teams.map(team => `<option>${team.name}</option>`).join('');
+            document.getElementById('team1').innerHTML = options;
+            document.getElementById('team2').innerHTML = options;
+        }
+
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // نظام التحكم العام
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -343,24 +400,6 @@
         function handleAdminTab() {
             sendVerificationCode();
             showTab('admin');
-        }
-
-        function verifyAdmin() {
-            const enteredCode = document.getElementById('adminCode').value;
-            if(enteredCode == currentCode) {
-                document.getElementById('adminLogin').style.display = 'none';
-                document.getElementById('adminControls').style.display = 'block';
-                updateTeamList();
-                updateTeamOptions();
-            } else {
-                alert('❌ الكود غير صحيح!');
-            }
-        }
-
-        function updateTeamOptions() {
-            const options = teams.map(team => `<option>${team.name}</option>`).join('');
-            document.getElementById('team1').innerHTML = options;
-            document.getElementById('team2').innerHTML = options;
         }
 
         function showTab(tabId) {
@@ -374,6 +413,16 @@
         window.onload = () => {
             updateTables();
             updateTeamOptions();
+            
+            // إعداد المزامنة
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('league-updates');
+                channel.onmessage = () => {
+                    teams = JSON.parse(localStorage.getItem('teams')) || [];
+                    matches = JSON.parse(localStorage.getItem('matches')) || [];
+                    updateTables();
+                }
+            }
         };
     </script>
 </body>
